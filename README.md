@@ -1,4 +1,10 @@
 ![image](https://github.com/rasieira98/EcoForecast-23/assets/116558787/61327ed2-ab7b-458d-9f6e-fbd43d0597a8)
+- INTRODUCCION
+- DATA INGESTION
+- DATA PREPROCESSING
+- TRAINING
+- EXAMPLE LOG OF AN EXECUTION
+- RESULTS IN TEST -> 'f1_macro': 0.7751518086158283
 ***
 # INTRODUCCION
 This GitHub repository contains a project aimed at calculating the energy surplus for each country in the next hour, addressing Schneider's challenge on the NUWE platform.
