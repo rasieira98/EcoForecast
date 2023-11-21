@@ -1,4 +1,4 @@
-![image](https://github.com/rasieira98/EcoForecast-23/assets/116558787/61327ed2-ab7b-458d-9f6e-fbd43d0597a8)
+![image](https://github.com/rasieira98/EcoForecast/assets/116558787/27f16f59-622c-40b6-b72a-a6100a3cf0eb)
 - INTRODUCCION
 - DATA INGESTION
 - DATA PREPROCESSING
