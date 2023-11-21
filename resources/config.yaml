@@ -1,0 +1,24 @@
+data_processing:
+  columns_clean: ["Country", "StartTime", "B01", "B09", "B10", "B11", "B12", "B13", "B15", "B16", "B18", "B19", "Load"]
+  columns_pivot: ["B01", "B09", "B10", "B11", "B12", "B13", "B15", "B16", "B18", "B19", "Load", "green_energy", "surplus"]
+  threshold_zscore: 4
+  interpolate_method: "linear"
+  interpolate_limit_direction: "both"
+  MAP_COUNTRY_ID: {"SP": 0, "UK": 1, "DE": 2, "DK": 3, "HU": 5, "SE": 4, "IT": 6, "PO": 7, "NL": 8}
+  country_frequency:
+    SP: 1H
+    DE: 15min
+    DK: 1H
+    HU: 15min
+    IT: 1H
+    NE: 15min
+    PO: 1H
+    SE: 1H
+    UK: 30min
+
+training:
+  eval_metric: f1_macro
+  holdout_frac: 0.3
+  presets: optimize_for_deployment
+  test_size: 0.2
+  random_state: 2023

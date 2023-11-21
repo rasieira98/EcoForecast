@@ -1,8 +1,9 @@
-import requests
-from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
-import pandas as pd
 from datetime import datetime, timedelta
+
+import pandas as pd
+import requests
+
 
 def xml_to_gen_data(xml_data) -> dict:
     """
@@ -11,13 +12,13 @@ def xml_to_gen_data(xml_data) -> dict:
 
     # Define the XML namespace
     namespace = {'ns': 'urn:iec62325.351:tc57wg16:451-6:generationloaddocument:3:0'}
-    
+
     # Parse the XML data
     root = ET.fromstring(xml_data)
-    
+
     # Get all TimeSeries tags
     time_series_tags = root.findall('.//ns:TimeSeries', namespace)
-    
+
     # Initialize a dictionary to hold the data
     data = {"StartTime": [], "EndTime": [], "AreaID": [], "UnitName": [], "PsrType": [], "quantity": []}
 
@@ -51,12 +52,12 @@ def xml_to_gen_data(xml_data) -> dict:
 
                 # Calculate the actual start and end time for each resolution_minutes interval
                 start_time_interval = datetime.fromisoformat(period_start.replace('Z', '+00:00'))
-                end_time_interval = start_time_interval + timedelta(minutes=resolution_minutes*(int(position)-1))
+                end_time_interval = start_time_interval + timedelta(minutes=resolution_minutes * (int(position) - 1))
                 start_time_interval = end_time_interval - timedelta(minutes=resolution_minutes)
 
                 # Append the StartTime, EndTime, AreaID, UnitName, PsrType, and quantity values to the data dictionary
-                data["StartTime"].append(start_time_interval.isoformat(timespec='minutes')+'Z')
-                data["EndTime"].append(end_time_interval.isoformat(timespec='minutes')+'Z')
+                data["StartTime"].append(start_time_interval.isoformat(timespec='minutes') + 'Z')
+                data["EndTime"].append(end_time_interval.isoformat(timespec='minutes') + 'Z')
                 data["AreaID"].append(area_id)
                 data["UnitName"].append(unit_name)
                 data["PsrType"].append(psr_type)
@@ -67,8 +68,9 @@ def xml_to_gen_data(xml_data) -> dict:
 
     # Create a separate DataFrame for each PsrType
     df_dict = {psr_type: df[df["PsrType"] == psr_type] for psr_type in df["PsrType"].unique()}
-    
+
     return df_dict
+
 
 def xml_to_load_dataframe(xml_data) -> pd.DataFrame:
     """
@@ -93,25 +95,28 @@ def xml_to_load_dataframe(xml_data) -> pd.DataFrame:
 
             # Resolution is PT15M or PT60M
             resolution_minutes = int(resolution.replace('PT', '').replace('M', ''))
-            
+
             for point in period.findall('ns:Point', namespace):
                 position = point.find('ns:position', namespace).text
                 quantity = point.find('ns:quantity', namespace).text
 
                 # calculate the actual start and end time for each resolution_minutes interval
                 start_time_interval = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                end_time_interval = start_time_interval + timedelta(minutes=resolution_minutes*(int(position)-1))
+                end_time_interval = start_time_interval + timedelta(minutes=resolution_minutes * (int(position) - 1))
                 start_time_interval = end_time_interval - timedelta(minutes=resolution_minutes)
 
-                data.append([start_time_interval.isoformat(timespec='minutes')+'Z', end_time_interval.isoformat(timespec='minutes')+'Z', 
+                data.append([start_time_interval.isoformat(timespec='minutes') + 'Z',
+                             end_time_interval.isoformat(timespec='minutes') + 'Z',
                              domain_mrid, unit_name, quantity])
 
     df = pd.DataFrame(data, columns=['StartTime', 'EndTime', 'AreaID', 'UnitName', 'Load'])
     return df
 
+
 def make_url(base_url, params):
     query_string = "&".join([f"{k}={v}" for k, v in params.items()])
     return f"{base_url}?{query_string}"
+
 
 def perform_get_request(base_url, params):
     url = make_url(base_url, params)
@@ -120,3 +125,37 @@ def perform_get_request(base_url, params):
         return response.text
     else:
         return response.content
+
+
+def get_chunks_between_dates(start_date_str: str, end_date_str: str) -> list[list[str, str]]:
+    """
+    Divide the time interval between two dates into chunks.
+
+    Parameters:
+    - start_date_str (str): The start date in the format "%Y%m%d%H%M".
+    - end_date_str (str): The end date in the format "%Y%m%d%H%M".
+
+    Returns:
+    - list[list[str, str]]: A list of chunks, where each chunk is represented
+      by a list containing the start and end dates in the format "%Y%m%d%H%M".
+      """
+
+    start_date = datetime.strptime(start_date_str, "%Y%m%d%H%M")
+    end_date = datetime.strptime(end_date_str, "%Y%m%d%H%M")
+
+    dif_days = (end_date - start_date).days
+    num_chunks = dif_days // 366 + 1
+    days_per_chunk = dif_days // num_chunks
+
+    chunks_interval = []
+    for i in range(0, num_chunks):
+        start_date_chunk = start_date
+        end_date_chunk = (start_date + timedelta(days=days_per_chunk))
+        if i == num_chunks - 1:
+            end_date_chunk = end_date
+
+        chunks_interval.append([start_date_chunk.strftime('%Y%m%d%H%M'), end_date_chunk.strftime('%Y%m%d%H%M')])
+
+        start_date = (start_date + timedelta(days=days_per_chunk + 1))
+
+    return chunks_interval
